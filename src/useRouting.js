@@ -1,34 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 
-class Segment {
-
-}
-
-class PathSegment extends Segment {
-  constructor(name) {
-    this.name = name;
-  }
-}
-
-class PathVarSegment extends Segment {
-  constructor(name, type, def) {
-    this.name = name;
-    this.type = type;
-    this.def = def;
-  }
-}
-
-class Route {
-  constructor(segments, params) {
-    this.segments = segments;
-    this.params = params;
-  }
-  
-  match(url) {
-  
-  }
-}
-
 //function checkDefault(type, _default) {
 //    switch (type) {
 //    case 'string':
@@ -222,15 +193,15 @@ export function parseRoute(route) {
       continue;
     }
 
-    match = value.match(intType);
-    if (match) {
-      params.set(key, {type: 'number', _default: parseInt(value)});
-      continue;
-    }
-
     match = value.match(floatType);
     if (match) {
       params.set(key, {type: 'number', _default: parseFloat(value)});
+      continue;
+    }
+
+    match = value.match(intType);
+    if (match) {
+      params.set(key, {type: 'number', _default: parseInt(value)});
       continue;
     }
 
@@ -249,27 +220,30 @@ export function parseRoute(route) {
     throw new Error(`Invalid query parameter name: ${key} value: ${value} in route: ${route}`)
   }
 
-  return [segments, params];
+  return {path: segments, params: params};
 }
 
 export function matchRouteAndGenerateState(hash, routes) {
-  const url = new URL(window.location.hash, 'http://hello');
-  const pathSplit = url.pathname.split('/');
+  const url = new URL(hash, 'https://hello');
+  let pathSplit = url.pathname.split('/');
+  pathSplit = pathSplit.filter((part) => !part.match(/^\s*$/));
   let newState = {};
 
   goto_routes:
-  for (let nameRoute of routes) {
+  for (let nameRoute of Object.entries(routes)) {
     let name = nameRoute[0];
     let route = nameRoute[1];
-    let routePath = route[0];
-    let routeParams = route[1];
+    let routePath = route.path;
+    let routeParams = route.params;
     newState = {};
-    if (routePath.length === pathSplit) {
-      for (let n in routePath) {
+    if (routePath.length === pathSplit.length) {
+      for (let n = 0; n < routePath.length; n++) {
         const routePart = routePath[n];
         const urlPart = pathSplit[n];
         if (routePart.type === 'path' && routePart.name !== urlPart) {
           continue goto_routes;
+        } else if (routePart.type === 'path') {
+          continue;
         }
 
         if (routePart.type === 'boolean') {
@@ -282,13 +256,13 @@ export function matchRouteAndGenerateState(hash, routes) {
 
         if (routePart.type === 'number') {
           const intParsed = parseInt(urlPart);
-          if (!isNan(intParsed)) {
+          if (!isNaN(intParsed)) {
             newState[routePart.name] = intParsed;
             continue;
           }
 
           const floatParsed = parseFloat(urlPart);
-          if (!isNan(floatParsed)) {
+          if (!isNaN(floatParsed)) {
             newState[routePart.name] = floatParsed;
             continue;
           }
@@ -308,7 +282,43 @@ export function matchRouteAndGenerateState(hash, routes) {
         throw new Error(`Unable to identify path part ${urlPart} ${routePart}`)
       }
 
-      if ()
+      for (let param of routeParams) {
+        const name = param[0];
+        const options = param[1]
+        let value = url.searchParams.get(name);
+
+        if (value === null && options._default) {
+          value = options._default;
+        }
+
+        if (value === null) {
+          continue;
+        }
+
+        if (options.type === 'boolean') {
+          if (value === 'true' || value === 'false') {
+            value = value === 'true';
+          } else {
+            throw new Error(`Invalid boolean for param: ${name} boolean: ${value}`);
+          }
+        }
+
+        if (options.type === 'number') {
+          const intParsed = parseInt(value);
+          const floatParsed = parseFloat(value);
+          if (!isNaN(intParsed)) {
+            value = intParsed;
+          } else if (!isNaN(floatParsed)) {
+            value = floatParsed;
+          } else {
+            throw new Error(`Invalid number for param: ${name} number ${value}`);
+          }
+        }
+
+        newState[name] = value;
+      }
+
+      return {name: name, state: newState};
     }
   }
 
@@ -321,7 +331,7 @@ export function useRouter(component, routes) {
   const [currentRoute, setCurrentRoute] = useState(null);
   const parsedRoutes = new Map();
 
-  routes.entries().forEach((nameRoute) => {
+  Object.entries(routes).forEach((nameRoute) => {
     parsedRoutes.set(nameRoute[0], parseRoute(nameRoute[1]));
   });
 
@@ -329,21 +339,24 @@ export function useRouter(component, routes) {
     back() {},
     forward() {},
     navigate() {},
+    route: currentRoute
   };
 
   useEffect(() => {
     // Alert some text if there has been changes to the anchor part
     function hashChange(event) {
-      setCurrentRoute(window.location.hash);
+      const route = matchRouteAndGenerateState(window.location.hash, routes);
+      setCurrentRoute(route);
     }
 
     window.addEventListener("hashchange", hashChange, false);
+    window.addEventListener('load', hashChange, false);
 
     return (function () {
       window.removeEventListener("hashchange", hashChange, false);
+      window.removeEventListener("load", hashChange, false);
     });
-  });
-
+  }, []);
 
   return (
     <RoutingContext.Provider value={routingValue}>

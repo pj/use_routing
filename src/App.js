@@ -1,9 +1,10 @@
 import React from 'react';
 import './App.css';
-import {RoutingProvider, useRouting} from './useRouting';
+import {useRouter, useRouting} from './useRouting';
 
 function SubApp(props) {
   const currentRoute = useRouting();
+  console.log(currentRoute);
   return (
     <div className="App">
       Current route is: {currentRoute.path}
@@ -15,10 +16,14 @@ function SubApp(props) {
 }
 
 function App(props) {
-  return (
-    <RoutingProvider>
-      <SubApp />
-    </RoutingProvider>
+  return useRouter(
+    <SubApp />,
+    {
+      thing: '/thing',
+      other: '/other/other_id=number',
+      yet_another: '/other?thing=42'
+
+    }
   );
 }
 
