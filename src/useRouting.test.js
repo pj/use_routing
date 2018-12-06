@@ -71,51 +71,52 @@ it('parses routes', () => {
 });
 
 it('matches routes', () => {
-  const routes = {
-    //root: {
-    //  path: [],
-    //  params: new Map()
-    //},
-    hello: {
-      path: [{
-        name: 'hello',
-        type: 'path',
-        _default: null
-      },{
-        name: 'hello_id',
-        type: 'number',
-        _default: null
-      }],
-      params: new Map([['x', {type: 'boolean', _default: null}]])
-    },
-    hello_world: {
-      path: [{
-        name: 'hello',
-        type: 'path',
-        _default: null
-      },
+  const routes = new Map([
+    [
+      'hello',
       {
-        name: 'hello_id',
-        type: 'number',
-        _default: null
-      },
-      {
-        name: 'world',
-        type: 'path',
-        _default: null
-      },
-      {
-        name: 'world_id',
-        type: 'string',
-        _default: null
+        path: [{
+          name: 'hello',
+          type: 'path',
+          _default: null
+        },{
+          name: 'hello_id',
+          type: 'number',
+          _default: null
+        }],
+        params: new Map([['x', {type: 'boolean', _default: null}]])
       }
-      ],
-      params: new Map([
-        ['x', {type: 'boolean', _default: null}],
-        ['y', {type: 'number', _default: 1234}]
-      ])
-    }
-  };
+    ],[
+      'hello_world',
+      {
+        path: [{
+          name: 'hello',
+          type: 'path',
+          _default: null
+        },
+        {
+          name: 'hello_id',
+          type: 'number',
+          _default: null
+        },
+        {
+          name: 'world',
+          type: 'path',
+          _default: null
+        },
+        {
+          name: 'world_id',
+          type: 'string',
+          _default: null
+        }
+        ],
+        params: new Map([
+          ['x', {type: 'boolean', _default: null}],
+          ['y', {type: 'number', _default: 1234}]
+        ])
+      }
+    ]
+  ]);
 
   //let result = matchRouteAndGenerateState('', routes);
   //expect(result.name).toEqual('root');

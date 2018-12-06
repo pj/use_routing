@@ -4,13 +4,25 @@ import {useRouter, useRouting} from './useRouting';
 
 function SubApp(props) {
   const currentRoute = useRouting();
-  console.log(currentRoute);
+  if (currentRoute === null) {
+    return null;
+  }
   return (
     <div className="App">
-      Current route is: {currentRoute.path}
-      <button onClick={(e) => currentRoute.navigate('thing')}>thing</button>
-      <button onClick={(e) => currentRoute.navigate('other')}>other</button>
-      <button onClick={(e) => currentRoute.navigate('yet_another')}>yet_another</button>
+      <div id="path">{currentRoute.name}</div>
+      <div id="params">{JSON.stringify(currentRoute.state, null, 2)}</div>
+      <button id="thing" onClick={(e) => currentRoute.navigate('thing')}>
+        thing
+      </button>
+      <button id="other" onClick={(e) => currentRoute.navigate('other', {'other_id': 123})}>
+        other
+      </button>
+      <button
+        id="yet_another"
+        onClick={(e) => currentRoute.navigate('yet_another')}
+      >
+        yet_another
+      </button>
     </div>
   );
 }

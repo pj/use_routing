@@ -136,10 +136,10 @@ const VALID_IDENTIFIER = '[a-zA-Z_][a-zA-Z_0-9]*';
 //
 //  return strings;
 //}
-const typeType = '(string|number|boolean)';
-const intType = '(\\d+)';
-const floatType = '(\\d+\.\\d+)';
-const boolType = '(true|false)';
+//const typeType = '(string|number|boolean)';
+//const intType = '(\\d+)';
+//const floatType = '(\\d+\.\\d+)';
+//const boolType = '(true|false)';
 const stringType = '(.*)';
 
 export function parseRoute(route) {
@@ -151,13 +151,13 @@ export function parseRoute(route) {
   const typeType = '(string|number|boolean)';
   const typePath = new RegExp(`^(${VALID_IDENTIFIER})=${typeType}$`);
   const intType = '(\\d+)';
-  const intPath = new RegExp(`^(${VALID_IDENTIFIER})=${intType}$`);
+  //const intPath = new RegExp(`^(${VALID_IDENTIFIER})=${intType}$`);
   const floatType = '(\\d+\.\\d+)';
-  const floatPath = new RegExp(`^(${VALID_IDENTIFIER})=${floatType}$`);
+  //const floatPath = new RegExp(`^(${VALID_IDENTIFIER})=${floatType}$`);
   const boolType = '(true|false)';
-  const boolPath = new RegExp(`^(${VALID_IDENTIFIER})=${boolType}$`);
+  //const boolPath = new RegExp(`^(${VALID_IDENTIFIER})=${boolType}$`);
   const stringType = '(.*)';
-  const stringPath = new RegExp(`^(${VALID_IDENTIFIER})=${stringType}$`);
+  //const stringPath = new RegExp(`^(${VALID_IDENTIFIER})=${stringType}$`);
   const partPath = new RegExp(`^(${VALID_IDENTIFIER})$`);
 
   const pathParts = url.pathname.split('/');
@@ -224,14 +224,16 @@ export function parseRoute(route) {
 }
 
 export function matchRouteAndGenerateState(hash, routes) {
+  hash = hash.replace('#', '');
   const url = new URL(hash, 'https://hello');
   let pathSplit = url.pathname.split('/');
   pathSplit = pathSplit.filter((part) => !part.match(/^\s*$/));
   let newState = {};
 
   goto_routes:
-  for (let nameRoute of Object.entries(routes)) {
+  for (let nameRoute of routes) {
     let name = nameRoute[0];
+    console.log(name);
     let route = nameRoute[1];
     let routePath = route.path;
     let routeParams = route.params;
@@ -325,36 +327,75 @@ export function matchRouteAndGenerateState(hash, routes) {
   throw new Error(`No valid route found for url: ${hash}`);
 }
 
+export function formatUrl(name, params, routes) {
+  params = params || {};
+  const route = routes.get(name);
+  const pathParts = [];
+  if (route) {
+    for (let routePart of route.path) {
+      if (routePart.type === 'path') {
+        pathParts.push(routePart.name);
+        continue;
+      }
+
+      let value = params[routePart.name];
+      if (value === undefined) {
+        value = routePart._default;
+      }
+      if (!value) {
+        throw new Error(`Param ${routePart.name} not found and no default while generating url for ${name}`);
+      }
+      pathParts.push(value);
+    }
+
+    return `/${pathParts.join('/')}`;
+  } else {
+    throw new Error(`No route found for name ${name}`);
+  }
+}
+
 const RoutingContext = React.createContext(null);
+const parsedRoutes = new Map();
 
 export function useRouter(component, routes) {
   const [currentRoute, setCurrentRoute] = useState(null);
-  const parsedRoutes = new Map();
 
   Object.entries(routes).forEach((nameRoute) => {
     parsedRoutes.set(nameRoute[0], parseRoute(nameRoute[1]));
   });
 
-  const routingValue = {
-    back() {},
-    forward() {},
-    navigate() {},
-    route: currentRoute
-  };
+  let routingValue = null;
+  if (currentRoute) {
+    routingValue = {
+      back() {
+        window.history.back();
+      },
+      forward() {
+        window.history.forward();
+      },
+      navigate(name, params) {
+        const url = formatUrl(name, params, parsedRoutes);
+        window.location.hash = url;
+      },
+      name: currentRoute.name,
+      state: currentRoute.state,
+    };
+  }
 
   useEffect(() => {
-    // Alert some text if there has been changes to the anchor part
     function hashChange(event) {
-      const route = matchRouteAndGenerateState(window.location.hash, routes);
+      if (event) {
+        event.preventDefault();
+      }
+      const route = matchRouteAndGenerateState(window.location.hash, parsedRoutes);
       setCurrentRoute(route);
     }
 
     window.addEventListener("hashchange", hashChange, false);
-    window.addEventListener('load', hashChange, false);
+    hashChange();
 
     return (function () {
       window.removeEventListener("hashchange", hashChange, false);
-      window.removeEventListener("load", hashChange, false);
     });
   }, []);
 
