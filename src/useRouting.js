@@ -1,145 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-
-//function checkDefault(type, _default) {
-//    switch (type) {
-//    case 'string':
-//      return typeof _default === 'string';
-//    case 'number':
-//      return typeof _default === 'number';
-//    case 'boolean':
-//      return typeof _default === 'boolean';
-//    default:
-//      return false;
-//    }
-//}
-//
-//const VALID_TYPES = [
-//  'string',
-//  'number',
-//  'boolean'
-//];
-//
-//export function p(spec) {
-//    spec = spec[0];
-//    switch (spec) {
-//    case 'string':
-//      return ['string', null];
-//    case 'number':
-//      return ['number', null];
-//    case 'boolean':
-//      return ['boolean', null];
-//    case 'true':
-//      return ['boolean', true];
-//    case 'false':
-//      return ['boolean', false];
-//    default:
-//      if (spec.match(/^\d+$/)) {
-//        return ['number', parseInt(spec)];
-//      } else if (spec.match(/^\d+\.\d+/)) {
-//        return ['number', parseFloat(spec)];
-//      } else {
-//        return ['string', spec];
-//      }
-//    }
-//}
-//
-//export function path(name, type, _default) {
-//  if (_default === undefined) {
-//    if (_type === undefined) {
-//      return PathVarSegment(name, 'string', null);
-//    }
-//    if (VALID_TYPES.indexOf(type) !== -1) {
-//      return PathVarSegment(name, type, null);
-//    }
-//
-//    switch (typeof type) {
-//    case 'string':
-//      return PathVarSegment(name, 'string', type);
-//    case 'number':
-//      return PathVarSegment(name, 'number', type);
-//    case 'boolean':
-//      return PathVarSegment(name, 'boolean', type);
-//    }
-//
-//    throw new Error(`Invalid type or can't infer type: ${type}`);
-//  }
-//
-//  if (VALID_TYPES.indexOf(type) !== -1) {
-//    if (!checkDefault(type, _default)) {
-//      throw new Error(`Default ${_default} is not of type ${type}`)
-//    }
-//    return new PathVarSegment(
-//      name,
-//      type,
-//      _default
-//    )
-//  }
-//  throw new Error(`Invalid type or can't infer type: ${type}`);
-//}
-//
 const VALID_IDENTIFIER = '[a-zA-Z_][a-zA-Z_0-9]*';
-
-//export function route(strings, ...exps) {
-//  const segments = [];
-//  const params = new Map();
-//  const queryAmpersand = new RegExp(`^&(${VALID_IDENTIFIER})=$`);
-//  const queryQuestion = new RegExp(`^\\?(${VALID_IDENTIFIER})=$`);
-//  const pathQuestion = new RegExp(`^/(${VALID_IDENTIFIER})\\?(${VALID_IDENTIFIER})=$`);
-//  const pathParam = new RegExp(`^(/${VALID_IDENTIFIER})+/${VALID_IDENTIFIER}=$`);
-//  const path = new RegExp(`^(/${VALID_IDENTIFIER})+$`);
-//
-//  let inQuery = false;
-//  let currentExp = 0;
-//  for (let piece of strings) {
-//    if (inQuery) {
-//      if (piece === '') {
-//        break;
-//      }
-//      const match = piece.match(queryAmpersand);
-//      if (match) {
-//        const name = match[1];
-//        const exp = exps[currentExp];
-//        currentExp = currentExp + 1;
-//        params.set(name, exp);
-//      } else {
-//        throw new Error(`Invalid query parameter: ${piece}`);
-//      }
-//    } else {
-//      let match = piece.match(queryQuestion);
-//      if (match) {
-//        inQuery = true;
-//        const exp = exps[currentExp];
-//        currentExp = currentExp + 1;
-//        params.set(match[1], exp);
-//        continue;
-//      }
-//
-//      let match = piece.match(pathQuestion);
-//      if (match) {
-//        inQuery = true;
-//
-//        const exp = exps[currentExp];
-//        currentExp = currentExp + 1;
-//        params.set(match[1], exp);
-//        continue;
-//      }
-//
-//    
-//    }
-//
-//
-//  }
-//
-//
-//  // Interleave strings and exps
-//  let expPosition = 0;
-//
-//  return strings;
-//}
-//const typeType = '(string|number|boolean)';
-//const intType = '(\\d+)';
-//const floatType = '(\\d+\.\\d+)';
-//const boolType = '(true|false)';
 const stringType = '(.*)';
 
 export function parseRoute(route) {
@@ -151,13 +11,9 @@ export function parseRoute(route) {
   const typeType = '(string|number|boolean)';
   const typePath = new RegExp(`^(${VALID_IDENTIFIER})=${typeType}$`);
   const intType = '(\\d+)';
-  //const intPath = new RegExp(`^(${VALID_IDENTIFIER})=${intType}$`);
   const floatType = '(\\d+\.\\d+)';
-  //const floatPath = new RegExp(`^(${VALID_IDENTIFIER})=${floatType}$`);
   const boolType = '(true|false)';
-  //const boolPath = new RegExp(`^(${VALID_IDENTIFIER})=${boolType}$`);
   const stringType = '(.*)';
-  //const stringPath = new RegExp(`^(${VALID_IDENTIFIER})=${stringType}$`);
   const partPath = new RegExp(`^(${VALID_IDENTIFIER})$`);
 
   const pathParts = url.pathname.split('/');
@@ -233,7 +89,6 @@ export function matchRouteAndGenerateState(hash, routes) {
   goto_routes:
   for (let nameRoute of routes) {
     let name = nameRoute[0];
-    console.log(name);
     let route = nameRoute[1];
     let routePath = route.path;
     let routeParams = route.params;
@@ -343,12 +198,28 @@ export function formatUrl(name, params, routes) {
         value = routePart._default;
       }
       if (!value) {
-        throw new Error(`Param ${routePart.name} not found and no default while generating url for ${name}`);
+        throw new Error(`Path param ${routePart.name} not found and no default while generating url for ${name}`);
       }
       pathParts.push(value);
     }
+    const formattedParams = [];
+    for (const param of route.params.entries()) {
+      const paramName = param[0];
+      const details = param[1];
+      let value = params[paramName];
+      if (!value) {
+        value = details._default;
+      }
 
-    return `/${pathParts.join('/')}`;
+      if (value) {
+        formattedParams.push(`${paramName}=${value}`);
+        continue;
+      }
+
+      throw new Error(`Query param ${paramName} not found and no default while generating url for ${name}`);
+    }
+
+    return `/${pathParts.join('/')}?${formattedParams.join('&')}`;
   } else {
     throw new Error(`No route found for name ${name}`);
   }

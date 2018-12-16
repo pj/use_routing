@@ -11,6 +11,7 @@ function SubApp(props) {
     <div className="App">
       <div id="path">{currentRoute.name}</div>
       <div id="params">{JSON.stringify(currentRoute.state, null, 2)}</div>
+      <button id="back" onClick={(e) => currentRoute.back()}>Back</button>
       <button id="thing" onClick={(e) => currentRoute.navigate('thing')}>
         thing
       </button>
@@ -23,6 +24,23 @@ function SubApp(props) {
       >
         yet_another
       </button>
+      <button
+        id="hello_world"
+        onClick={(e) => currentRoute.navigate('hello_world')}
+      >
+        hello_world
+      </button>
+      <button
+        id="blah"
+        onClick={
+          (e) => currentRoute.navigate('blah', {'blah_id': 'xxxxx', 'qwer': 42})
+        }
+      >
+        blah
+      </button>
+      <button id="forward" onClick={(e) => currentRoute.forward()}>
+        Forward
+      </button>
     </div>
   );
 }
@@ -33,8 +51,9 @@ function App(props) {
     {
       thing: '/thing',
       other: '/other/other_id=number',
-      yet_another: '/other?thing=42'
-
+      yet_another: '/other?thing=42',
+      hello_world: '/hello/world',
+      blah: '/blah/blah_id=string/asdf?qwer=number'
     }
   );
 }
