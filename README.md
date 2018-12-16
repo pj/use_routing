@@ -2,6 +2,8 @@
 
 Toy react hooks hash router for learning react hooks.
 
+_Do not use for anything real_
+
 # How to define routes.
 
 Define your routes using an object where the keys are the route name and the 
