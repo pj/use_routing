@@ -2,7 +2,7 @@
 
 Toy react hooks hash router for learning react hooks.
 
-*Do not use for anything real!*
+**Do not use for anything real!**
 
 # How to define routes.
 
