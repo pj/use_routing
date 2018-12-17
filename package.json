@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "microbundle": "^0.8.3",
+    "parcel": "^1.10.3",
     "react": "^16.7.0-alpha.0",
     "react-dom": "^16.7.0-alpha.0",
     "rimraf": "^2.6.2",
@@ -13,7 +14,8 @@
     "build": "rimraf dist && microbundle -o dist/ --name useRouting --sourcemap true",
     "prepublishOnly": "yarn build",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "start": "parcel examples/index.html"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -32,6 +34,9 @@
     "@types/jest": "^23.3.10",
     "@types/node": "^10.12.15",
     "@types/react-dom": "^16.0.11",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
     "jest": "^23.6.0",
     "ts-jest": "^23.10.5"
   }

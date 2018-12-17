@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {useRouter, useRouting} from './useRouting';
+import {useRouter, useRouting} from '../src/useRouting';
 
 function SubApp(props) {
   const currentRoute = useRouting();

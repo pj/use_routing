@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import {URL} from "url";
 const VALID_IDENTIFIER = '[a-zA-Z_][a-zA-Z_0-9]*';
 const stringType = '(.*)';
 
@@ -27,14 +26,14 @@ export function parseRoute(route: string) {
     let match = part.match(typePath);
 
     if (match) {
-      segments.push({name: match[1], type: match[2], _default: null});
+      segments.push({name: match[1], _type: match[2], _default: null});
       continue;
     }
 
     match = part.match(partPath);
 
     if (match) {
-      segments.push({name: match[1], type: 'path', _default: null});
+      segments.push({name: match[1], _type: 'path', _default: null});
       continue;
     }
 
@@ -48,31 +47,31 @@ export function parseRoute(route: string) {
 
     let match = value.match(typeType);
     if (match) {
-      params.set(key, {type: value, _default: null});
+      params.set(key, {_type: value, _default: null});
       continue;
     }
 
     match = value.match(floatType);
     if (match) {
-      params.set(key, {type: 'number', _default: parseFloat(value)});
+      params.set(key, {_type: 'number', _default: parseFloat(value)});
       continue;
     }
 
     match = value.match(intType);
     if (match) {
-      params.set(key, {type: 'number', _default: parseInt(value)});
+      params.set(key, {_type: 'number', _default: parseInt(value)});
       continue;
     }
 
     match = value.match(boolType);
     if (match) {
-      params.set(key, {type: 'boolean', _default: value === 'true'});
+      params.set(key, {_type: 'boolean', _default: value === 'true'});
       continue;
     }
 
     match = value.match(stringType);
     if (match) {
-      params.set(key, {type: 'string', _default: value});
+      params.set(key, {_type: 'string', _default: value});
       continue;
     }
 
@@ -233,7 +232,9 @@ export function formatUrl(
       const details = param[1];
       let paramValue = params[paramName];
       let value: string | boolean | number | null = null;
-      if (!paramValue) {
+      if (paramValue) {
+        value = paramValue;
+      } else {
         value = details._default;
       }
 

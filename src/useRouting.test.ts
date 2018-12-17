@@ -12,29 +12,29 @@ it('parses routes', () => {
   route = parseRoute('/hello_id=number');
   expect(route.path.length).toEqual(1);
   expect(route.path[0].name).toEqual('hello_id');
-  expect(route.path[0].type).toEqual('number');
+  expect(route.path[0]._type).toEqual('number');
   expect(route.params.size).toEqual(0);
 
   route = parseRoute('/hello');
   expect(route.path.length).toEqual(1);
   expect(route.path[0].name).toEqual('hello');
-  expect(route.path[0].type).toEqual('path');
+  expect(route.path[0]._type).toEqual('path');
   expect(route.params.size).toEqual(0);
 
   route = parseRoute('/hello/world');
   expect(route.path.length).toEqual(2);
   expect(route.path[0].name).toEqual('hello');
-  expect(route.path[0].type).toEqual('path');
+  expect(route.path[0]._type).toEqual('path');
   expect(route.path[1].name).toEqual('world');
-  expect(route.path[1].type).toEqual('path');
+  expect(route.path[1]._type).toEqual('path');
   expect(route.params.size).toEqual(0);
 
   route = parseRoute('/hello/hello_id=number');
   expect(route.path.length).toEqual(2);
   expect(route.path[0].name).toEqual('hello');
-  expect(route.path[0].type).toEqual('path');
+  expect(route.path[0]._type).toEqual('path');
   expect(route.path[1].name).toEqual('hello_id');
-  expect(route.path[1].type).toEqual('number');
+  expect(route.path[1]._type).toEqual('number');
   expect(route.params.size).toEqual(0);
 
   route = parseRoute('?hello_id=number');
@@ -42,31 +42,31 @@ it('parses routes', () => {
   expect(route.params.size).toEqual(1);
   const hello_id = route.params.get('hello_id');
   expect(hello_id).not.toBeNull();
-  expect(hello_id.type).toBe('number');
+  expect(hello_id._type).toBe('number');
   expect(hello_id._default).toBeNull();
 
   route = parseRoute('/hello/hello_id=string/world/world_id=number?x=boolean&y=1.234&z=42');
   expect(route.path.length).toEqual(4);
   expect(route.path[0].name).toEqual('hello');
-  expect(route.path[0].type).toEqual('path');
+  expect(route.path[0]._type).toEqual('path');
   expect(route.path[1].name).toEqual('hello_id');
-  expect(route.path[1].type).toEqual('string');
+  expect(route.path[1]._type).toEqual('string');
   expect(route.path[2].name).toEqual('world');
-  expect(route.path[2].type).toEqual('path');
+  expect(route.path[2]._type).toEqual('path');
   expect(route.path[3].name).toEqual('world_id');
-  expect(route.path[3].type).toEqual('number');
+  expect(route.path[3]._type).toEqual('number');
   expect(route.params.size).toEqual(3);
   const x = route.params.get('x');
   expect(x).not.toBeNull();
-  expect(x.type).toBe('boolean');
+  expect(x._type).toBe('boolean');
   expect(x._default).toBeNull();
   const y = route.params.get('y');
   expect(y).not.toBeNull();
-  expect(y.type).toBe('number');
+  expect(y._type).toBe('number');
   expect(y._default).toBe(1.234);
   const z = route.params.get('z');
   expect(z).not.toBeNull();
-  expect(z.type).toBe('number');
+  expect(z._type).toBe('number');
   expect(z._default).toBe(42);
 });
 
