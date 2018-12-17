@@ -58,4 +58,4 @@ function SubApp(props) {
 }
 ```
 
-Check src/App.js for a more complete example.
+Check examples/App.js for a more complete example.
