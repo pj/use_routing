@@ -1,5 +1,5 @@
 import React from 'react';
-import './App.css';
+import ReactDOM from 'react-dom';
 import {useRouter, useRouting} from './useRouting';
 
 function SubApp(props) {
@@ -8,10 +8,13 @@ function SubApp(props) {
     return null;
   }
   return (
-    <div className="App">
+    <div>
       <div id="path">{currentRoute.name}</div>
       <div id="params">{JSON.stringify(currentRoute.state, null, 2)}</div>
       <button id="back" onClick={(e) => currentRoute.back()}>Back</button>
+      <button id="root" onClick={(e) => currentRoute.navigate('root')}>
+        root
+      </button>
       <button id="thing" onClick={(e) => currentRoute.navigate('thing')}>
         thing
       </button>
@@ -49,6 +52,7 @@ function App(props) {
   return useRouter(
     <SubApp />,
     {
+      root: '',
       thing: '/thing',
       other: '/other/other_id=number',
       yet_another: '/other?thing=42',
@@ -58,4 +62,4 @@ function App(props) {
   );
 }
 
-export default App;
+ReactDOM.render(<App />, document.getElementById('root'));

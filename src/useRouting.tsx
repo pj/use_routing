@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import {URL} from "url";
 const VALID_IDENTIFIER = '[a-zA-Z_][a-zA-Z_0-9]*';
 const stringType = '(.*)';
 
-export function parseRoute(route) {
+export function parseRoute(route: string) {
   const url = new URL(route, 'http://hello');
 
   const segments = [];
@@ -39,6 +41,7 @@ export function parseRoute(route) {
     throw new Error(`Invalid path part ${part} in route ${route}`);
   }
 
+  // @ts-ignore
   for (let entry of url.searchParams) {
     let key = entry[0];
     let value = entry[1];
@@ -63,7 +66,7 @@ export function parseRoute(route) {
 
     match = value.match(boolType);
     if (match) {
-      params.set(key, {type: 'boolean', _default: value === true});
+      params.set(key, {type: 'boolean', _default: value === 'true'});
       continue;
     }
 
@@ -79,12 +82,34 @@ export function parseRoute(route) {
   return {path: segments, params: params};
 }
 
-export function matchRouteAndGenerateState(hash, routes) {
+type RoutePart = {
+  _type: 'path' | 'string' | 'number' | 'boolean';
+  name: string;
+};
+
+type Param = {
+  _type: 'path' | 'string' | 'number' | 'boolean';
+  _default: string | number | boolean | null;
+};
+
+type Route = {
+  path: RoutePart[],
+  params: Map<string, Param>
+};
+
+type RouteState = {
+  [key: string]: string | number | boolean;
+}
+
+export function matchRouteAndGenerateState(
+  hash: string,
+  routes: Map<string, Route>
+) {
   hash = hash.replace('#', '');
   const url = new URL(hash, 'https://hello');
   let pathSplit = url.pathname.split('/');
   pathSplit = pathSplit.filter((part) => !part.match(/^\s*$/));
-  let newState = {};
+  let newState = ({} as RouteState);
 
   goto_routes:
   for (let nameRoute of routes) {
@@ -97,13 +122,13 @@ export function matchRouteAndGenerateState(hash, routes) {
       for (let n = 0; n < routePath.length; n++) {
         const routePart = routePath[n];
         const urlPart = pathSplit[n];
-        if (routePart.type === 'path' && routePart.name !== urlPart) {
+        if (routePart._type === 'path' && routePart.name !== urlPart) {
           continue goto_routes;
-        } else if (routePart.type === 'path') {
+        } else if (routePart._type === 'path') {
           continue;
         }
 
-        if (routePart.type === 'boolean') {
+        if (routePart._type === 'boolean') {
           if (urlPart === 'true' || urlPart === 'false') {
             newState[routePart.name] = urlPart === 'true';
             continue;
@@ -111,7 +136,7 @@ export function matchRouteAndGenerateState(hash, routes) {
           continue goto_routes;
         }
 
-        if (routePart.type === 'number') {
+        if (routePart._type === 'number') {
           const intParsed = parseInt(urlPart);
           if (!isNaN(intParsed)) {
             newState[routePart.name] = intParsed;
@@ -127,7 +152,7 @@ export function matchRouteAndGenerateState(hash, routes) {
           continue goto_routes;
         }
 
-        if (routePart.type === 'string') {
+        if (routePart._type === 'string') {
           const match = urlPart.match(stringType);
           if (match) {
             newState[routePart.name] = urlPart;
@@ -142,37 +167,36 @@ export function matchRouteAndGenerateState(hash, routes) {
       for (let param of routeParams) {
         const name = param[0];
         const options = param[1]
-        let value = url.searchParams.get(name);
+        let paramValue = url.searchParams.get(name);
 
-        if (value === null && options._default) {
-          value = options._default;
+        if (paramValue === null && options._default) {
+          newState[name] = options._default;
         }
 
-        if (value === null) {
+        if (paramValue === null) {
           continue;
         }
 
-        if (options.type === 'boolean') {
-          if (value === 'true' || value === 'false') {
-            value = value === 'true';
+        if (options._type === 'boolean') {
+          if (paramValue === 'true' || paramValue === 'false') {
+            newState[name] = paramValue === 'true';
           } else {
-            throw new Error(`Invalid boolean for param: ${name} boolean: ${value}`);
+            throw new Error(`Invalid boolean for param: ${name} boolean: ${paramValue}`);
           }
         }
 
-        if (options.type === 'number') {
-          const intParsed = parseInt(value);
-          const floatParsed = parseFloat(value);
+        if (options._type === 'number') {
+          const intParsed = parseInt(paramValue);
+          const floatParsed = parseFloat(paramValue);
           if (!isNaN(intParsed)) {
-            value = intParsed;
+            newState[name] = intParsed;
           } else if (!isNaN(floatParsed)) {
-            value = floatParsed;
+            newState[name] = floatParsed;
           } else {
-            throw new Error(`Invalid number for param: ${name} number ${value}`);
+            throw new Error(`Invalid number for param: ${name} number ${paramValue}`);
           }
         }
 
-        newState[name] = value;
       }
 
       return {name: name, state: newState};
@@ -182,23 +206,24 @@ export function matchRouteAndGenerateState(hash, routes) {
   throw new Error(`No valid route found for url: ${hash}`);
 }
 
-export function formatUrl(name, params, routes) {
+export function formatUrl(
+  name: string,
+  params: {[key: string]: string | number | boolean},
+  routes: Map<string, Route>
+) {
   params = params || {};
   const route = routes.get(name);
   const pathParts = [];
   if (route) {
     for (let routePart of route.path) {
-      if (routePart.type === 'path') {
+      if (routePart._type === 'path') {
         pathParts.push(routePart.name);
         continue;
       }
 
       let value = params[routePart.name];
-      if (value === undefined) {
-        value = routePart._default;
-      }
       if (!value) {
-        throw new Error(`Path param ${routePart.name} not found and no default while generating url for ${name}`);
+        throw new Error(`Path param ${routePart.name} not found while generating url for ${name}`);
       }
       pathParts.push(value);
     }
@@ -206,8 +231,9 @@ export function formatUrl(name, params, routes) {
     for (const param of route.params.entries()) {
       const paramName = param[0];
       const details = param[1];
-      let value = params[paramName];
-      if (!value) {
+      let paramValue = params[paramName];
+      let value: string | boolean | number | null = null;
+      if (!paramValue) {
         value = details._default;
       }
 
@@ -219,7 +245,10 @@ export function formatUrl(name, params, routes) {
       throw new Error(`Query param ${paramName} not found and no default while generating url for ${name}`);
     }
 
-    return `/${pathParts.join('/')}?${formattedParams.join('&')}`;
+    if (formattedParams.length > 0) {
+      return `/${pathParts.join('/')}?${formattedParams.join('&')}`;
+    }
+    return `/${pathParts.join('/')}`;
   } else {
     throw new Error(`No route found for name ${name}`);
   }
@@ -228,14 +257,19 @@ export function formatUrl(name, params, routes) {
 const RoutingContext = React.createContext(null);
 const parsedRoutes = new Map();
 
-export function useRouter(component, routes) {
-  const [currentRoute, setCurrentRoute] = useState(null);
+type CurrentRoute = {
+  name: string;
+  state: RouteState;
+};
+
+export function useRouter(component: JSX.Element, routes: {[key: string]: string}) {
+  const [currentRoute, setCurrentRoute] = (React.useState(null) as [CurrentRoute | null, any]);
 
   Object.entries(routes).forEach((nameRoute) => {
     parsedRoutes.set(nameRoute[0], parseRoute(nameRoute[1]));
   });
 
-  let routingValue = null;
+  let routingValue: any = null;
   if (currentRoute) {
     routingValue = {
       back() {
@@ -244,7 +278,7 @@ export function useRouter(component, routes) {
       forward() {
         window.history.forward();
       },
-      navigate(name, params) {
+      navigate(name: string, params: {[key: string]: string | number | boolean}) {
         const url = formatUrl(name, params, parsedRoutes);
         window.location.hash = url;
       },
@@ -253,8 +287,8 @@ export function useRouter(component, routes) {
     };
   }
 
-  useEffect(() => {
-    function hashChange(event) {
+  React.useEffect(() => {
+    function hashChange(event?: HashChangeEvent) {
       if (event) {
         event.preventDefault();
       }
@@ -278,7 +312,7 @@ export function useRouter(component, routes) {
 }
 
 export function useRouting() {
-  const currentRoute = useContext(RoutingContext);
+  const currentRoute = React.useContext(RoutingContext);
   return currentRoute;
 }
 

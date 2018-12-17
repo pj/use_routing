@@ -71,58 +71,66 @@ it('parses routes', () => {
 });
 
 it('matches routes', () => {
-  const routes = new Map([
+  const routes: any = new Map([
     [
+      'root',
+      {
+        path: [],
+        params: new Map([['asdf', {_type: 'boolean', _default: null}]])
+      }
+    ],[
       'hello',
       {
         path: [{
           name: 'hello',
-          type: 'path',
+          _type: 'path',
           _default: null
         },{
           name: 'hello_id',
-          type: 'number',
+          _type: 'number',
           _default: null
         }],
-        params: new Map([['x', {type: 'boolean', _default: null}]])
+        params: new Map([['x', {_type: 'boolean', _default: null}]])
       }
     ],[
       'hello_world',
       {
         path: [{
           name: 'hello',
-          type: 'path',
+          _type: 'path',
           _default: null
         },
         {
           name: 'hello_id',
-          type: 'number',
+          _type: 'number',
           _default: null
         },
         {
           name: 'world',
-          type: 'path',
+          _type: 'path',
           _default: null
         },
         {
           name: 'world_id',
-          type: 'string',
+          _type: 'string',
           _default: null
         }
         ],
         params: new Map([
-          ['x', {type: 'boolean', _default: null}],
-          ['y', {type: 'number', _default: 1234}]
+          ['x', {_type: 'boolean', _default: null}],
+          ['y', {_type: 'number', _default: 1234}]
         ])
       }
     ]
   ]);
 
-  //let result = matchRouteAndGenerateState('', routes);
-  //expect(result.name).toEqual('root');
-  //expect(result.type).toEqual('path');
+  let result = matchRouteAndGenerateState('', routes);
+  expect(result.name).toEqual('root');
 
-  let result = matchRouteAndGenerateState('/hello/1234?x=true', routes);
+  result = matchRouteAndGenerateState('/', routes);
+  expect(result.name).toEqual('root');
+
+  result = matchRouteAndGenerateState('/hello/1234?x=true', routes);
   expect(result.name).toEqual('hello');
   expect(result.state).toEqual({hello_id: 1234, x: true});
 

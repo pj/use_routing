@@ -3,23 +3,36 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "microbundle": "^0.8.3",
     "react": "^16.7.0-alpha.0",
     "react-dom": "^16.7.0-alpha.0",
-    "react-scripts": "2.1.1"
+    "rimraf": "^2.6.2",
+    "typescript": "^3.2.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "build": "rimraf dist && microbundle -o dist/ --name useRouting --sourcemap true",
+    "prepublishOnly": "yarn build",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "eslintConfig": {
     "extends": "react-app"
   },
+  "main": "dist/useRouting.js",
+  "umd:main": "dist/useRouting.umd.js",
+  "module": "dist/useRouting.mjs",
+  "source": "src/useRouting.tsx",
   "browserslist": [
     ">0.2%",
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {
+    "@types/jest": "^23.3.10",
+    "@types/node": "^10.12.15",
+    "@types/react-dom": "^16.0.11",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5"
+  }
 }
